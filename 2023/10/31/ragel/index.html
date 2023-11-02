@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="什么是Ragelragel是一个有限状态机编译器和解释器生成器，它支持生成c&#x2F;c++、go、java等语言的代码。ragel一般用作文本解析和输入验证。 ragel的核心在于，它是一个确定性有限自动机，核心是由正则表达式运算符和动作嵌入运算符组成。通过动作嵌入运算符，可以改变状态机状态。 Ragel的优势我们可以使用ragel做文本解析或输入验证。当你需要解析复杂的HTTP请求，解析从H">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ragel——字符串匹配神器">
+<meta property="og:url" content="http://example.com/2023/10/31/ragel/index.html">
+<meta property="og:site_name" content="CaiS1">
+<meta property="og:description" content="什么是Ragelragel是一个有限状态机编译器和解释器生成器，它支持生成c&#x2F;c++、go、java等语言的代码。ragel一般用作文本解析和输入验证。 ragel的核心在于，它是一个确定性有限自动机，核心是由正则表达式运算符和动作嵌入运算符组成。通过动作嵌入运算符，可以改变状态机状态。 Ragel的优势我们可以使用ragel做文本解析或输入验证。当你需要解析复杂的HTTP请求，解析从H">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/rl1.png">
+<meta property="og:image" content="http://example.com/images/rl2.png">
+<meta property="article:published_time" content="2023-10-31T08:40:05.000Z">
+<meta property="article:modified_time" content="2023-10-31T17:02:11.344Z">
+<meta property="article:author" content="CaiS1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/rl1.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Ragel——字符串匹配神器</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/Categories/">categories</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/10/30/tools/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/10/31/ragel/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/10/31/ragel/&text=Ragel——字符串匹配神器"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/10/31/ragel/&is_video=false&description=Ragel——字符串匹配神器"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ragel——字符串匹配神器&body=Check out this article: http://example.com/2023/10/31/ragel/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/10/31/ragel/&name=Ragel——字符串匹配神器&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/10/31/ragel/&t=Ragel——字符串匹配神器"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFRagel"><span class="toc-number">1.</span> <span class="toc-text">什么是Ragel</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Ragel%E7%9A%84%E4%BC%98%E5%8A%BF"><span class="toc-number">2.</span> <span class="toc-text">Ragel的优势</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#cout-rl"><span class="toc-number">2.1.</span> <span class="toc-text">cout.rl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Makefile"><span class="toc-number">2.2.</span> <span class="toc-text">Makefile</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8Ragel%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90HTTP%E8%AF%B7%E6%B1%82"><span class="toc-number">3.</span> <span class="toc-text">简单使用Ragel实现解析HTTP请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Ragel-%E5%BC%BA%E5%A4%A7%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E7%A7%BB%E4%BB%A5%E5%8F%8A%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">4.</span> <span class="toc-text">Ragel 强大的状态转移以及运算符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Ragel——字符串匹配神器
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">CaiS1</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-10-31T08:40:05.000Z" class="dt-published" itemprop="datePublished">2023-10-31</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h3 id="什么是Ragel"><a href="#什么是Ragel" class="headerlink" title="什么是Ragel"></a>什么是Ragel</h3><p>ragel是一个有限状态机编译器和解释器生成器，它支持生成c&#x2F;c++、go、java等语言的代码。ragel一般用作文本解析和输入验证。</p>
+<p>ragel的核心在于，它是一个确定性有限自动机，核心是由正则表达式运算符和动作嵌入运算符组成。通过动作嵌入运算符，可以改变状态机状态。</p>
+<h3 id="Ragel的优势"><a href="#Ragel的优势" class="headerlink" title="Ragel的优势"></a>Ragel的优势</h3><p>我们可以使用ragel做文本解析或输入验证。<br>当你需要解析复杂的HTTP请求，解析从HTTP请求拆分的字符串，再进行某些攻击检测时，传统的正则表达式总是显得有些力不从心。</p>
+<p>举个简单的例子</p>
+<p>当我们需要匹配a的n次方且b的n次方时，正则表达式无法表达所有状态</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">n=0,1,2...</span><br><span class="line">使用正则表达式怎么写？</span><br><span class="line">如果使用 a*b* 无法保证a的个数和b的个数一致</span><br><span class="line"></span><br><span class="line">只有当n是确定且 n==4 时，正则表达式可以写成 a&#123;4&#125;b&#123;4&#125;</span><br></pre></td></tr></table></figure>
+<p>而ragel可以表示所有状态。下面我将使用ragel生成c代码，表示匹配a的n次方且b的n次方</p>
+<h4 id="cout-rl"><a href="#cout-rl" class="headerlink" title="cout.rl"></a>cout.rl</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line"></span><br><span class="line">%%&#123;</span><br><span class="line">machine foo;</span><br><span class="line">action action_a &#123;</span><br><span class="line">    a_cout ++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">action action_b &#123;</span><br><span class="line">    b_cout ++;</span><br><span class="line">&#125;</span><br><span class="line">main := &#x27;a&#x27;* @action_a</span><br><span class="line">        &#x27;b&#x27;* @action_b</span><br><span class="line">;</span><br><span class="line">write data;</span><br><span class="line">&#125;%%</span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[]) &#123;</span><br><span class="line">    int cs;</span><br><span class="line">    size_t a_cout = 0;</span><br><span class="line">    size_t b_cout = 0;</span><br><span class="line">    if(argc &gt; 1)&#123;</span><br><span class="line">        char *p = argv[1];</span><br><span class="line">        char *pe = p + strlen(p);</span><br><span class="line">        %%&#123;</span><br><span class="line">            write init;</span><br><span class="line">            write exec;</span><br><span class="line">        &#125;%%</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    printf(&quot;a_cout=%d\nb_cout=%d&quot;, a_cout,b_cout);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="Makefile"><a href="#Makefile" class="headerlink" title="Makefile"></a>Makefile</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">all: compile</span><br><span class="line">.PHONY: all</span><br><span class="line"></span><br><span class="line">generate:</span><br><span class="line">	ragel -n -p -o cout.c cout.rl </span><br><span class="line">.PHONY: generate</span><br><span class="line"></span><br><span class="line">compile: generate</span><br><span class="line">	gcc cout.c</span><br><span class="line">.PHONY: compile</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">	rm -rf a.out</span><br><span class="line">.PHONY: clean</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/images/rl1.png"></p>
+<p>可以看出，无论我们想输入什么样的形如aaabb字符，我们都可以拥有不同的策略来应对它，而不需要写多个正则表达式。</p>
+<h3 id="简单使用Ragel实现解析HTTP请求"><a href="#简单使用Ragel实现解析HTTP请求" class="headerlink" title="简单使用Ragel实现解析HTTP请求"></a>简单使用Ragel实现解析HTTP请求</h3><p>下面是我用Ragel实现的一个解析HTTP协议的算法，写得非常简单，但足以看出ragel的解析能力。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;stdio.h&gt;</span><br><span class="line">#include&lt;string.h&gt;</span><br><span class="line">#include&lt;stdlib.h&gt;</span><br><span class="line">#include &lt;stdbool.h&gt;</span><br><span class="line"></span><br><span class="line">%%&#123;</span><br><span class="line">    machine request;</span><br><span class="line"></span><br><span class="line">    Simple_Method = </span><br><span class="line">        &quot;GET&quot;</span><br><span class="line">        |</span><br><span class="line">        &quot;POST&quot;</span><br><span class="line">        |</span><br><span class="line">        &quot;PUT&quot;</span><br><span class="line">        |</span><br><span class="line">        &quot;OPTION&quot;</span><br><span class="line">    ;</span><br><span class="line">    LF = &#x27;\n&#x27;;</span><br><span class="line">    CR = &#x27;\r&#x27;;</span><br><span class="line">    CRLF = CR? LF;</span><br><span class="line">    HTTP_VERSION = ( </span><br><span class="line">        &#x27;HTTP/&#x27;</span><br><span class="line">        digit+</span><br><span class="line">        (</span><br><span class="line">            &#x27;.&#x27;</span><br><span class="line">            digit+</span><br><span class="line">        )?</span><br><span class="line">    );</span><br><span class="line">    url_path = [alnum&#x27;/&#x27;]+</span><br><span class="line">    ;</span><br><span class="line">    header =</span><br><span class="line">         alnum +&#x27;: &#x27; alnum+</span><br><span class="line">    ;</span><br><span class="line">    key_value = </span><br><span class="line">        (alnum &#x27;=&#x27; alnum) (&#x27;&amp;&#x27; alnum &#x27;=&#x27; alnum)?</span><br><span class="line">    ;</span><br><span class="line"></span><br><span class="line">    main :=</span><br><span class="line">        Simple_Method &#x27; /&#x27; url_path? (&#x27;?&#x27;key_value*)? &#x27; &#x27; HTTP_VERSION  CRLF</span><br><span class="line">        (header CRLF)+ @&#123; success = true;&#125;</span><br><span class="line">    ;</span><br><span class="line">&#125;%%</span><br><span class="line"></span><br><span class="line">%% write data;</span><br><span class="line"></span><br><span class="line">int main(int argc,char * argv[]) &#123;</span><br><span class="line">	if(argc &gt; 1) &#123;</span><br><span class="line">		int cs;</span><br><span class="line">		char *request;</span><br><span class="line">		FILE *file = fopen(argv[1],&quot;rb&quot;);</span><br><span class="line">		if(file == NULL)&#123;</span><br><span class="line">			return 0;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		fseek(file, 0, SEEK_END);</span><br><span class="line">		int length = ftell(file);</span><br><span class="line">		fseek(file, 0, SEEK_SET);</span><br><span class="line"></span><br><span class="line">		request = (char *)malloc(length + 1);</span><br><span class="line">		fread(request, 1, length, file);</span><br><span class="line">		fclose(file);</span><br><span class="line"></span><br><span class="line">        bool success = false;</span><br><span class="line">		char *p = request;</span><br><span class="line">        char *pe = request + length;</span><br><span class="line">        char *eof = pe;</span><br><span class="line"></span><br><span class="line">        %% write init;</span><br><span class="line">        %% write exec;</span><br><span class="line"></span><br><span class="line">        if (success) &#123;</span><br><span class="line">            printf(&quot;HTTP 格式正确&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="Ragel-强大的状态转移以及运算符"><a href="#Ragel-强大的状态转移以及运算符" class="headerlink" title="Ragel 强大的状态转移以及运算符"></a>Ragel 强大的状态转移以及运算符</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x27;&gt;&#x27; 在匹配第一个字符成功后立即执行action，此时p指向匹配的第一个字符</span><br><span class="line">&#x27;@&#x27; 尽可能长的完全匹配所有字符后执行action，此时p指向匹配的最后一个字符</span><br><span class="line">&#x27;%&#x27; 完整匹配所有字符后执行action，此时p指向匹配的最后一个字符</span><br><span class="line"></span><br><span class="line">注：关于&#x27;@&#x27;和&#x27;%&#x27;的使用可以自己做实验简单测试一下</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/images/rl2.png"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Ragel作为一个确定有限状态机，能在状态转移过程中插入动作，可随时更改转移状态，在文本解析或者协议解析方面有着非常大的优势。且可以生成c&#x2F;c++、go、java代码任意调用，非常具有便携性。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/Categories/">categories</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFRagel"><span class="toc-number">1.</span> <span class="toc-text">什么是Ragel</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Ragel%E7%9A%84%E4%BC%98%E5%8A%BF"><span class="toc-number">2.</span> <span class="toc-text">Ragel的优势</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#cout-rl"><span class="toc-number">2.1.</span> <span class="toc-text">cout.rl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Makefile"><span class="toc-number">2.2.</span> <span class="toc-text">Makefile</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8Ragel%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90HTTP%E8%AF%B7%E6%B1%82"><span class="toc-number">3.</span> <span class="toc-text">简单使用Ragel实现解析HTTP请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Ragel-%E5%BC%BA%E5%A4%A7%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E7%A7%BB%E4%BB%A5%E5%8F%8A%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">4.</span> <span class="toc-text">Ragel 强大的状态转移以及运算符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/10/31/ragel/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/10/31/ragel/&text=Ragel——字符串匹配神器"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/10/31/ragel/&is_video=false&description=Ragel——字符串匹配神器"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ragel——字符串匹配神器&body=Check out this article: http://example.com/2023/10/31/ragel/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/10/31/ragel/&title=Ragel——字符串匹配神器"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/10/31/ragel/&name=Ragel——字符串匹配神器&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/10/31/ragel/&t=Ragel——字符串匹配神器"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    CaiS1
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/Categories/">categories</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
